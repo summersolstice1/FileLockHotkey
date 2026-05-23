@@ -7,5 +7,6 @@
     <Nullable>enable</Nullable>
     <AssemblyName>FileLockHotkey</AssemblyName>
     <RootNamespace>FileLockHotkey</RootNamespace>
+    <ApplicationIcon>Assets\AppIcon.ico</ApplicationIcon>
   </PropertyGroup>
 </Project>

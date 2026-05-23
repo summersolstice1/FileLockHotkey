@@ -19,7 +19,10 @@ internal sealed class HotkeyApplicationContext : ApplicationContext
         _window = new MessageWindow(OnHotkeyPressed);
         _hotkey = HotkeySettingsStore.Load();
 
-        var menu = new ContextMenuStrip();
+        var menu = new ContextMenuStrip
+        {
+            Font = AppTheme.CreateFont(9F)
+        };
         menu.Items.Add("检测当前选中文件", null, (_, _) => ShowLocksForExplorerSelection(ExplorerSelectionMode.AllowAnyExplorerWindow));
         _hotkeyMenuItem = new ToolStripMenuItem();
         _hotkeyMenuItem.Click += (_, _) => ShowHotkeySettings();
@@ -30,7 +33,7 @@ internal sealed class HotkeyApplicationContext : ApplicationContext
 
         _notifyIcon = new NotifyIcon
         {
-            Icon = SystemIcons.Application,
+            Icon = AppIcons.AppIcon,
             Text = BuildNotifyIconText(),
             ContextMenuStrip = menu,
             Visible = true

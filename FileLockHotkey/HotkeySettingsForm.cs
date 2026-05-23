@@ -28,59 +28,98 @@ internal sealed class HotkeySettingsForm : Form
 
     private void InitializeComponent()
     {
+        AppTheme.ApplyForm(this);
         Text = "设置快捷键";
         StartPosition = FormStartPosition.CenterParent;
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
         MinimizeBox = false;
-        ClientSize = new Size(460, 230);
+        ClientSize = new Size(500, 270);
+
+        var headerPanel = new Panel
+        {
+            BackColor = AppTheme.Header,
+            Dock = DockStyle.Top,
+            Height = 72,
+            Padding = new Padding(20, 12, 20, 12)
+        };
+
+        var iconBox = new PictureBox
+        {
+            Image = AppIcons.CreateBitmap(40),
+            Location = new Point(20, 16),
+            Size = new Size(40, 40),
+            SizeMode = PictureBoxSizeMode.CenterImage
+        };
 
         var titleLabel = new Label
         {
-            Text = "按下新的快捷键",
+            Text = "设置快捷键",
             AutoSize = false,
-            Location = new Point(20, 18),
-            Size = new Size(420, 28),
-            Font = new Font(Font.FontFamily, 11, FontStyle.Bold)
+            Location = new Point(72, 12),
+            Size = new Size(390, 26),
+            Font = AppTheme.CreateFont(12F, FontStyle.Bold),
+            ForeColor = Color.White,
+            TextAlign = ContentAlignment.BottomLeft
         };
 
+        var tipLabel = new Label
+        {
+            Text = "按下新的组合键，保存后立即生效",
+            AutoSize = false,
+            Location = new Point(72, 39),
+            Size = new Size(390, 20),
+            ForeColor = Color.FromArgb(213, 224, 235),
+            TextAlign = ContentAlignment.TopLeft
+        };
+
+        headerPanel.Controls.Add(iconBox);
+        headerPanel.Controls.Add(titleLabel);
+        headerPanel.Controls.Add(tipLabel);
+
         _captureLabel.AutoSize = false;
+        _captureLabel.BackColor = AppTheme.Surface;
         _captureLabel.BorderStyle = BorderStyle.FixedSingle;
-        _captureLabel.Location = new Point(20, 58);
-        _captureLabel.Size = new Size(420, 52);
+        _captureLabel.ForeColor = AppTheme.AccentDark;
+        _captureLabel.Location = new Point(20, 96);
+        _captureLabel.Size = new Size(460, 58);
         _captureLabel.TextAlign = ContentAlignment.MiddleCenter;
-        _captureLabel.Font = new Font(Font.FontFamily, 16, FontStyle.Bold);
+        _captureLabel.Font = AppTheme.CreateFont(17F, FontStyle.Bold);
 
         _statusLabel.AutoSize = false;
-        _statusLabel.Location = new Point(20, 120);
-        _statusLabel.Size = new Size(420, 42);
+        _statusLabel.ForeColor = AppTheme.Muted;
+        _statusLabel.Location = new Point(20, 164);
+        _statusLabel.Size = new Size(460, 38);
         _statusLabel.TextAlign = ContentAlignment.MiddleLeft;
 
         var defaultButton = new Button
         {
             Text = "恢复默认",
-            Location = new Point(20, 178),
-            Size = new Size(96, 32)
+            Location = new Point(20, 218),
+            Size = new Size(104, 36)
         };
+        AppTheme.StyleButton(defaultButton);
         defaultButton.Click += (_, _) => SetSelectedHotkey(HotkeyConfig.Default);
 
         _okButton.Text = "保存";
-        _okButton.Location = new Point(238, 178);
-        _okButton.Size = new Size(96, 32);
+        _okButton.Location = new Point(268, 218);
+        _okButton.Size = new Size(100, 36);
         _okButton.DialogResult = DialogResult.OK;
+        AppTheme.StyleButton(_okButton, ButtonRole.Primary);
 
         var cancelButton = new Button
         {
             Text = "取消",
-            Location = new Point(344, 178),
-            Size = new Size(96, 32),
+            Location = new Point(380, 218),
+            Size = new Size(100, 36),
             DialogResult = DialogResult.Cancel
         };
+        AppTheme.StyleButton(cancelButton);
 
         AcceptButton = _okButton;
         CancelButton = cancelButton;
 
-        Controls.Add(titleLabel);
+        Controls.Add(headerPanel);
         Controls.Add(_captureLabel);
         Controls.Add(_statusLabel);
         Controls.Add(defaultButton);
@@ -95,6 +134,7 @@ internal sealed class HotkeySettingsForm : Form
         {
             _captureLabel.Text = hotkey.DisplayText;
             _statusLabel.Text = error;
+            _statusLabel.ForeColor = AppTheme.Danger;
             _okButton.Enabled = false;
             return;
         }
@@ -107,6 +147,7 @@ internal sealed class HotkeySettingsForm : Form
         SelectedHotkey = hotkey;
         _captureLabel.Text = hotkey.DisplayText;
         _statusLabel.Text = "保存后立即生效。";
+        _statusLabel.ForeColor = AppTheme.Muted;
         _okButton.Enabled = hotkey.IsValid(out _);
     }
 }

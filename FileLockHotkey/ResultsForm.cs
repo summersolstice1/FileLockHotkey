@@ -6,6 +6,8 @@ namespace FileLockHotkey;
 internal sealed class ResultsForm : Form
 {
     private readonly Label _titleLabel = new();
+    private readonly Label _pathLabel = new();
+    private readonly Label _statusBadgeLabel = new();
     private readonly Label _statusLabel = new();
     private readonly ListView _listView = new();
     private readonly Button _refreshButton = new();
@@ -33,88 +35,175 @@ internal sealed class ResultsForm : Form
 
     private void InitializeComponent()
     {
+        AppTheme.ApplyForm(this);
         Text = "文件占用查看器";
         StartPosition = FormStartPosition.CenterScreen;
         MinimizeBox = true;
         MaximizeBox = true;
         MinimumSize = new Size(840, 420);
         Size = new Size(1080, 560);
+        Padding = new Padding(16);
+
+        var headerPanel = new Panel
+        {
+            BackColor = AppTheme.Header,
+            Dock = DockStyle.Top,
+            Height = 92,
+            Padding = new Padding(18, 14, 18, 14)
+        };
+
+        var headerLayout = new TableLayoutPanel
+        {
+            ColumnCount = 3,
+            Dock = DockStyle.Fill,
+            RowCount = 2
+        };
+        headerLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 56));
+        headerLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        headerLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 132));
+        headerLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 50));
+        headerLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 50));
+
+        var iconBox = new PictureBox
+        {
+            Dock = DockStyle.Fill,
+            Image = AppIcons.CreateBitmap(42),
+            SizeMode = PictureBoxSizeMode.CenterImage
+        };
 
         _titleLabel.AutoSize = false;
-        _titleLabel.Dock = DockStyle.Top;
-        _titleLabel.Height = 44;
-        _titleLabel.Font = new Font(Font.FontFamily, 11, FontStyle.Bold);
-        _titleLabel.TextAlign = ContentAlignment.MiddleLeft;
-        _titleLabel.Padding = new Padding(12, 0, 12, 0);
+        _titleLabel.Dock = DockStyle.Fill;
+        _titleLabel.Font = AppTheme.CreateFont(13F, FontStyle.Bold);
+        _titleLabel.ForeColor = Color.White;
+        _titleLabel.Text = "文件占用查看器";
+        _titleLabel.TextAlign = ContentAlignment.BottomLeft;
 
-        _statusLabel.AutoSize = false;
-        _statusLabel.Dock = DockStyle.Top;
-        _statusLabel.Height = 34;
-        _statusLabel.TextAlign = ContentAlignment.MiddleLeft;
-        _statusLabel.Padding = new Padding(12, 0, 12, 0);
+        _pathLabel.AutoEllipsis = true;
+        _pathLabel.AutoSize = false;
+        _pathLabel.Dock = DockStyle.Fill;
+        _pathLabel.Font = AppTheme.CreateFont(9F);
+        _pathLabel.ForeColor = Color.FromArgb(213, 224, 235);
+        _pathLabel.TextAlign = ContentAlignment.TopLeft;
+
+        _statusBadgeLabel.AutoSize = false;
+        _statusBadgeLabel.BackColor = AppTheme.Accent;
+        _statusBadgeLabel.Dock = DockStyle.Fill;
+        _statusBadgeLabel.Font = AppTheme.CreateFont(9F, FontStyle.Bold);
+        _statusBadgeLabel.ForeColor = Color.White;
+        _statusBadgeLabel.Margin = new Padding(12, 10, 0, 10);
+        _statusBadgeLabel.Text = "准备就绪";
+        _statusBadgeLabel.TextAlign = ContentAlignment.MiddleCenter;
+
+        headerLayout.Controls.Add(iconBox, 0, 0);
+        headerLayout.SetRowSpan(iconBox, 2);
+        headerLayout.Controls.Add(_titleLabel, 1, 0);
+        headerLayout.Controls.Add(_pathLabel, 1, 1);
+        headerLayout.Controls.Add(_statusBadgeLabel, 2, 0);
+        headerLayout.SetRowSpan(_statusBadgeLabel, 2);
+        headerPanel.Controls.Add(headerLayout);
 
         _listView.Dock = DockStyle.Fill;
         _listView.View = View.Details;
         _listView.FullRowSelect = true;
-        _listView.GridLines = true;
+        _listView.GridLines = false;
         _listView.MultiSelect = true;
         _listView.HideSelection = false;
+        _listView.BorderStyle = BorderStyle.None;
+        _listView.BackColor = AppTheme.Surface;
+        _listView.ForeColor = AppTheme.Text;
+        _listView.Font = AppTheme.CreateFont(9F);
         _listView.Columns.Add("文件", 260);
-        _listView.Columns.Add("进程/状态", 170);
+        _listView.Columns.Add("进程/状态", 180);
         _listView.Columns.Add("PID", 80);
         _listView.Columns.Add("类型/阶段", 100);
         _listView.Columns.Add("可重启", 80);
-        _listView.Columns.Add("程序路径/原因", 360);
+        _listView.Columns.Add("程序路径/原因", 400);
         _listView.SelectedIndexChanged += (_, _) => UpdateButtonStates();
+
+        var listPanel = new Panel
+        {
+            BackColor = AppTheme.Surface,
+            BorderStyle = BorderStyle.FixedSingle,
+            Dock = DockStyle.Fill,
+            Padding = new Padding(1)
+        };
+        listPanel.Controls.Add(_listView);
+
+        var footerPanel = new TableLayoutPanel
+        {
+            BackColor = AppTheme.Background,
+            ColumnCount = 2,
+            Dock = DockStyle.Bottom,
+            Height = 58,
+            Padding = new Padding(0, 12, 0, 0)
+        };
+        footerPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        footerPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 470));
+
+        _statusLabel.AutoEllipsis = true;
+        _statusLabel.AutoSize = false;
+        _statusLabel.Dock = DockStyle.Fill;
+        _statusLabel.ForeColor = AppTheme.Muted;
+        _statusLabel.TextAlign = ContentAlignment.MiddleLeft;
 
         var buttonPanel = new FlowLayoutPanel
         {
-            Dock = DockStyle.Bottom,
-            Height = 52,
+            Dock = DockStyle.Fill,
             FlowDirection = FlowDirection.RightToLeft,
-            Padding = new Padding(12, 8, 12, 8),
             WrapContents = false
         };
 
-        ConfigureButton(_closeButton, "关闭", (_, _) => Close());
-        ConfigureButton(_killButton, "结束选中进程", (_, _) => KillSelectedProcesses());
-        ConfigureButton(_copyButton, "复制结果", (_, _) => CopyResults());
-        ConfigureButton(_refreshButton, "刷新", (_, _) => RefreshLocks());
+        ConfigureButton(_closeButton, "关闭", ButtonRole.Secondary, 92, (_, _) => Close());
+        ConfigureButton(_killButton, "结束进程", ButtonRole.Danger, 108, (_, _) => KillSelectedProcesses());
+        ConfigureButton(_copyButton, "复制结果", ButtonRole.Secondary, 104, (_, _) => CopyResults());
+        ConfigureButton(_refreshButton, "刷新", ButtonRole.Primary, 92, (_, _) => RefreshLocks());
 
         buttonPanel.Controls.Add(_closeButton);
         buttonPanel.Controls.Add(_killButton);
         buttonPanel.Controls.Add(_copyButton);
         buttonPanel.Controls.Add(_refreshButton);
 
-        Controls.Add(_listView);
-        Controls.Add(_statusLabel);
-        Controls.Add(_titleLabel);
-        Controls.Add(buttonPanel);
+        footerPanel.Controls.Add(_statusLabel, 0, 0);
+        footerPanel.Controls.Add(buttonPanel, 1, 0);
+
+        Controls.Add(listPanel);
+        Controls.Add(footerPanel);
+        Controls.Add(headerPanel);
     }
 
-    private static void ConfigureButton(Button button, string text, EventHandler clickHandler)
+    private static void ConfigureButton(Button button, string text, ButtonRole role, int width, EventHandler clickHandler)
     {
         button.Text = text;
-        button.AutoSize = true;
-        button.MinimumSize = new Size(96, 32);
-        button.Margin = new Padding(6, 0, 0, 0);
+        button.Width = width;
+        AppTheme.StyleButton(button, role);
         button.Click += clickHandler;
     }
 
     private void RefreshLocks()
     {
-        _titleLabel.Text = _paths.Count == 1
-            ? $"正在检查：{_paths[0]}"
+        _titleLabel.Text = "文件占用查看器";
+        _pathLabel.Text = _paths.Count == 1
+            ? _paths[0]
             : $"正在检查 {_paths.Count} 个项目";
         _statusLabel.Text = "查询中...";
+        _statusBadgeLabel.Text = "查询中";
+        _statusBadgeLabel.BackColor = AppTheme.Accent;
         _listView.Items.Clear();
         UpdateButtonStates();
 
-        var result = FileLockScanner.Scan(_paths);
-        _locks = result.Locks;
-        _failures = result.Failures;
-        _checkedItemCount = result.CheckedItemCount;
-        PopulateListView();
+        UseWaitCursor = true;
+        try
+        {
+            var result = FileLockScanner.Scan(_paths);
+            _locks = result.Locks;
+            _failures = result.Failures;
+            _checkedItemCount = result.CheckedItemCount;
+            PopulateListView();
+        }
+        finally
+        {
+            UseWaitCursor = false;
+        }
     }
 
     private void PopulateListView()
@@ -123,6 +212,7 @@ internal sealed class ResultsForm : Form
         try
         {
             _listView.Items.Clear();
+            var rowIndex = 0;
             foreach (var item in _locks)
             {
                 var listItem = new ListViewItem(GetDisplayPath(item.FilePath))
@@ -134,6 +224,7 @@ internal sealed class ResultsForm : Form
                 listItem.SubItems.Add(item.AppType);
                 listItem.SubItems.Add(item.Restartable ? "是" : "否");
                 listItem.SubItems.Add(item.ExecutablePath ?? "无法读取");
+                ApplyRowStyle(listItem, rowIndex++);
                 _listView.Items.Add(listItem);
             }
 
@@ -141,13 +232,14 @@ internal sealed class ResultsForm : Form
             {
                 var listItem = new ListViewItem(GetDisplayPath(failure.FilePath))
                 {
-                    ForeColor = Color.DarkRed
+                    ForeColor = AppTheme.Danger
                 };
                 listItem.SubItems.Add("查询失败");
                 listItem.SubItems.Add(failure.ErrorCode?.ToString() ?? "-");
                 listItem.SubItems.Add(failure.Stage);
                 listItem.SubItems.Add("-");
                 listItem.SubItems.Add(failure.Message);
+                ApplyRowStyle(listItem, rowIndex++);
                 _listView.Items.Add(listItem);
             }
         }
@@ -157,7 +249,34 @@ internal sealed class ResultsForm : Form
         }
 
         _statusLabel.Text = BuildStatusText();
+        UpdateStatusBadge();
         UpdateButtonStates();
+    }
+
+    private static void ApplyRowStyle(ListViewItem item, int rowIndex)
+    {
+        item.UseItemStyleForSubItems = true;
+        item.BackColor = rowIndex % 2 == 0 ? AppTheme.Surface : AppTheme.SurfaceAlt;
+    }
+
+    private void UpdateStatusBadge()
+    {
+        if (_failures.Count > 0)
+        {
+            _statusBadgeLabel.Text = "有失败";
+            _statusBadgeLabel.BackColor = AppTheme.Warning;
+            return;
+        }
+
+        if (_locks.Count > 0)
+        {
+            _statusBadgeLabel.Text = "发现占用";
+            _statusBadgeLabel.BackColor = AppTheme.Danger;
+            return;
+        }
+
+        _statusBadgeLabel.Text = "未占用";
+        _statusBadgeLabel.BackColor = AppTheme.Accent;
     }
 
     private void CopyResults()
@@ -165,6 +284,7 @@ internal sealed class ResultsForm : Form
         if (_locks.Count == 0 && _failures.Count == 0)
         {
             Clipboard.SetText("未发现占用进程。");
+            _statusLabel.Text = "结果已复制到剪贴板。";
             return;
         }
 
@@ -190,6 +310,7 @@ internal sealed class ResultsForm : Form
         }
 
         Clipboard.SetText(builder.ToString());
+        _statusLabel.Text = "结果已复制到剪贴板。";
     }
 
     private void KillSelectedProcesses()

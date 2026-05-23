@@ -11,7 +11,7 @@ internal static class Program
         if (!createdNew)
         {
             MessageBox.Show(
-                "文件占用查看器已经在后台运行。\n\n在资源管理器中选中文件，然后按 Ctrl+Alt+L。",
+                $"文件占用查看器已经在后台运行。\n\n在资源管理器中选中文件，然后按 {HotkeyConfig.Default.DisplayText}。",
                 "文件占用查看器",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Information);
